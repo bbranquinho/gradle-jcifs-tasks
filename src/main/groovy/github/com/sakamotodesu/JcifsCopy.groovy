@@ -42,7 +42,7 @@ class JcifsCopy extends DefaultTask {
         }
 
         src.getFileList().findAll {
-            if (include == null || include.isEmpty()) {
+            if (include == null || include.isEmpty() || (it.isDirectory() && recursivaly)) {
                 true
             } else {
                 it.getName().matches(include)
@@ -57,7 +57,7 @@ class JcifsCopy extends DefaultTask {
             if (it.isDirectory()) {
                 if (recursivaly) {
                     def sub = it.path.replaceFirst(from, '')
-                    copyRecursivaly(sub)
+                    copyRecursivaly(sub + '/')
                 }
             } else {
                 def dstFile = CopyFileFactory.get(dst, it.name)
