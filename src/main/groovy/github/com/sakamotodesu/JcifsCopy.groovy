@@ -16,6 +16,7 @@ class JcifsCopy extends DefaultTask {
     String lmCompatibility = 3
     String include
     String exclude
+    Boolean recursivaly = false
 
     @TaskAction
     def jcifsCopy() {
@@ -27,12 +28,19 @@ class JcifsCopy extends DefaultTask {
             throw new InvalidUserDataException("into is empty")
         }
 
-        def src = CopyFileFactory.get(from)
-        def dst = CopyFileFactory.get(into)
+        copyRecursivaly('')
+    }
+
+    def copyRecursivaly(subPath) {
+        def src = CopyFileFactory.get(from + subPath)
+        def dst = CopyFileFactory.get(into + subPath)
+
         println dst
+
         if (!dst.exists()) {
             dst.mkdirs()
         }
+
         src.getFileList().findAll {
             if (include == null || include.isEmpty()) {
                 true
@@ -46,8 +54,16 @@ class JcifsCopy extends DefaultTask {
                 !it.getName().matches(exclude)
             }
         }.each {
-            def dstFile = CopyFileFactory.get(dst, it.getName())
-            it.copyTo(dstFile)
+            if (it.isDirectory()) {
+                if (recursivaly) {
+                    def sub = it.path.replaceFirst(from, '')
+                    copyRecursivaly(sub)
+                }
+            } else {
+                def dstFile = CopyFileFactory.get(dst, it.name)
+                println it
+                it.copyTo(dstFile)
+            }
         }
     }
 
